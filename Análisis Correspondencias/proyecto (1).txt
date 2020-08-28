@@ -1,0 +1,310 @@
+Base<-read.csv("C:/Users/Pavilion dv4/Documents/RICARDO/Multivariado/Base3.csv",header=T)
+
+library(ca)
+library(ade4)
+library(anacor)
+library(FactoMineR)
+names(Base)
+
+Base
+
+attach(Base)
+names(Base)
+#####Lic. vs Promedio
+
+prom<-matrix(c(1,30,28,10,6,33,37,10,2,8,22,7,13,22,7,1,0,10,11,1,2,34,27,3),nrow=6,byrow=TRUE)
+
+rownames(prom)<-c("Act","Bio","Mat","C.C","C.T","Fis")
+colnames(prom)<-c("Malo","Regular","Bueno","Muy Bueno")
+
+
+tot.row<-apply(prom,1,sum)
+tot.col<-apply(prom,2,sum)
+
+z1<-cbind(prom,tot.row) 
+z2<-rbind(z1,c(tot.col,sum(prom)))
+rownames(z2)<-c(rownames(prom),"tot.col")
+colnames(z2)<-c(colnames(prom),"tot.row")
+
+#Tabla 
+z2
+
+
+tab.pro<-prop.table(prom)
+tab.pro1<-prop.table(prom,1)
+tab.pro2<-prop.table(prom,2)
+
+
+
+## PERFILES RENGLON
+
+win.graph()
+
+metodo<-rownames(prom)
+matplot(t(tab.pro1),type="l",ylab="proporciones",ylim=c(0,.8),lty=1:6,col=rainbow(6),xaxt="n")
+axis(1,at=1:length(colnames(prom)),labels=colnames(prom))
+title("Perfiles renglón: Licenciatura")
+legend("topright",paste(" ",metodo),lty=1:6,col=rainbow(6))
+
+## Notamos que los que se parecen son el amarillo y el azul fuerte, que estan asociados
+## a las variables, ciencias de la tierra y biologia, observemos:
+
+
+## BIOLOGIA Y CIENCIAS DE LA TIERRA
+win.graph()
+perfiles<-(cbind(tab.pro1[2,],tab.pro1[5,]))
+perfiles
+colnames(perfiles)<-c("Biología","C. de la Tierra")
+matplot(perfiles,type="l",ylab="proporciones",ylim=c(0,0.8),lty=1:3,col=c("yellow","slateblue1"),lwd=2,xaxt="n")
+axis(1,at=1:length(colnames(prom)),labels=colnames(prom))
+legend("topright",c("Biología","C. de la Tierra"),lty=1:2,col=c("yellow","slateblue1"),lwd=2)
+
+## Tambien se observa una semejanza entre Actuaria y Fisica
+
+
+## ACTUARIA Y FISICA
+win.graph()
+perfiles<-(cbind(tab.pro1[1,],tab.pro1[6,]))
+perfiles
+colnames(perfiles)<-c("Actuaria","Fisica")
+matplot(perfiles,type="l",ylab="proporciones",ylim=c(0,0.8),lty=1:3,col=c("red","pink"),lwd=2,xaxt="n")
+axis(1,at=1:length(colnames(prom)),labels=colnames(prom))
+legend("topright",c("Actuaria","Fisica"),lty=1:2,col=c("red","pink"),lwd=2)
+
+
+
+
+
+
+# PERFILES COLUMNA
+
+win.graph()
+
+promedios<-colnames(prom)
+matplot(tab.pro2,type="l",ylab="proporciones",ylim=c(0,.7),lty=1:6,col=rainbow(6),xaxt="n")
+axis(1,at=1:length(rownames(prom)),labels=rownames(prom))
+title("Perfiles columna: Promedios")
+legend("topright",paste(" ",promedios),lty=1:6,col=rainbow(6))
+
+
+## Observamos que las variables que se parecen son MUY BUENO y BUENO, observemos
+
+win.graph()
+columnas<-(cbind(tab.pro2[,3],tab.pro2[,4]))
+columnas
+rownames(columnas)<-c("Bueno","Muy Bueno")
+matplot(columnas,type="l",ylab="proporciones",ylim=c(0,0.5),lty=1:2,col=c("green","blue"),lwd=2,xaxt="n")
+axis(1,at=1:length(rownames(prom)),labels=rownames(prom))
+legend("topright",c("Bueno","Muy Bueno"),lty=1:2,col=c("green","blue"),lwd=2)
+
+
+## Observemos si existe asociacion entre variables, graficamente
+
+####MOSAICO
+
+
+win.graph()
+
+mosaicplot(prom,color=TRUE, shade = T,main = "mosaico")
+
+## Observamos que existe asociacion de columnas con renglones, la mas notoria o 
+## representativa, es Ciencias de la Computacion con un promedio MALO, esta relacion
+## es positiva, esto quiere decir, que los computologos estan asociados con tener un mal
+## promedio.
+## Lo anterior tambien se observa, en la asociacion que tienen los Computologos con la variable
+## BUENO, ya que, esta asociacion es considerable, pero negativa, esto quiere decir que los 
+## computologos no tienen promedios buenos.
+
+## Tambien observamos que los matematicos tienen un nivel de asociacion considerable con la variable
+## regular, sin embargo, la asociacion que tienen es negativa, entonces, esto quiere decir
+## que los matematicos que hay o los que se muestran en este estudio, no tienen promedio regular
+## es decir, tienen promedio bueno o malo, pero no estan "medianones" 
+
+## VERIFIQUEMOS SI EXISTEN ASOCIACIONES ENTRE RENGLONES Y COLUMNAS MATEMATICAMENTE
+
+#Tabla completa
+
+tabla.completa<- function(X) { 
+        result <- chisq.test(X) 
+        print(result)
+        res<-result$residuals 
+        obs <- result$observed 
+        exp <- result$expected
+        res.crudos<-obs-exp
+        chi.table<-((obs-exp)^2)/exp 
+        row.sum <- apply(obs,1,sum) 
+        col.sum <- apply(obs,2,sum) 
+        N <- sum(obs) 
+ 
+        tablacompleta<- cbind(obs,row.sum) 
+        tablacompleta<- rbind(tablacompleta,c(col.sum,N)) 
+        rownames(tablacompleta) <- c(rownames(obs), "Total") 
+        colnames(tablacompleta) <- c(colnames(obs), "Total")
+        I<-length(X[,1])
+        J<-length(X[1,])
+        resnorm<-matrix(0,I,J)
+        
+         for(i in 1:I){
+              for(j in 1:J){
+               resnorm[i,j]<-(obs[i,j]-exp[i,j])/sqrt(exp[i,j]*(1-(row.sum[i]/N))*(1-(col.sum[j]/N)))
+
+}
+rownames(resnorm)<-rownames(obs)
+colnames(resnorm)<-colnames(obs)
+}
+
+return(list(Tabla.completa=tablacompleta,Expected=exp,Chi=chi.table,r.crudos=res.crudos,residuos=res,ajustados=resnorm))
+        } 
+
+tabla.completa(prom)
+
+################# PRUEBA MATEMATICA DE ASOCIACION ENTRE RENGLONES Y COLUMNAS
+
+##Ho: independencia entre renglones y columnas vs Ha: no independencia entre renglones y columnas
+
+## p-value<.05 ----> rechazamos Ho, es decir, existe asociacion entre renglones y columnas
+
+######## ANALISIS DE RESIDUOS 
+
+## Observamos en los residuos ajustados que los de mayor valor, o mayor significancia son:
+
+
+##################################################################
+
+Act vs Malo ----> -2.12
+Mat vs Reg  ----> -2.91
+C.C vs Malo ---->  6.15
+C.C vs Buen ----> -3.48 
+
+######################################################################
+
+## Es claro que C.C tiene un peso negativo en bueno y un peso muy positivo en Malo
+## lo que habiamos visto al inicio de este analisis, que C.C esta relacionado con el mal
+## promedio, a diferencia de los Actuarios, los cuales tienen un peso sobresaliente 
+## en Malo, pero negativo, esto quiere decir que no tienen mal promedio, ahora, para los
+## matematicos, tienen un peso negativo en regular, esto quiere decir, que pueden ser muy
+## buenos o muy malos.
+
+
+
+
+#### ESTO QUE SIGUE, TAMBIEN ES PARTE DEL ANALISIS, AUNQUE NO LO HE ANALIZADO CORRECTAMENTE
+### DE HECHO ESTA CON NOMBRES DISTINTOS (METODOS ANTICONCEPTIVOS) PERO SI CORRE!!! (Y NO ME REFIERO A FORES)
+### VELO VA?
+
+
+
+#Análisis
+
+ca(prom)
+
+## Obsvamos que la explicacion de inercia es buena en una dimension, sin embargo, con
+## dos dimensiones tenemos el 96.42% del total de inercia, esto quiere decir
+## que con dos dimensiones explicamos bien nuestro analisis, asi que nos quedamos con estas 
+## dos dimensiones.
+
+
+salida<-ca(prom,nd=2)
+
+summary(salida)
+
+## Confirmando lo anterior mencionado, nuestro analisis es explicado con un 96.4%
+## con dos dimensiones, sin embargo, observemos el analisis por renglon y por columna:
+
+
+## RENGLONES
+
+## Primero observamos que la calidad de representacion en dos dimensiones es considerable
+## sin embargo, en Actuaria y Ciencias de la tierra no es tan buena, a diferencia de
+## ciencias de la computacion, la cual es representada perfectamente, es probable que estas
+## variables que no estan representadas muy bien, vivan en R3, enfocandonos en la 
+## variable que nos ha generado conflicto o algo de ruido, la cual es Ciencias de la Computacion
+## observamos que vive en la primera dimension, con una calidad de representacion en esa dimension
+## de 996 y un peso en esa misma dimension de 819, ahora, observamos que las que estan
+## mejor representadas en la segunda dimension son biologia y matematicas, aunque biologia
+## no tiene un gran peso en esta dimension, a diferencia de matematicas con el mayor peso
+## de todas las variables.
+
+## COLUMNAS
+
+## Observamos que la variable con mayor calidad es Malo, la cual esta haciendo ruido en nuestro
+## analisis, esta tiene una calidad casi perfecta, a diferencia de MuyBueno, con una calidad
+## medianamente baja, tenemos que Malo esta representada muy bien por la primera dimension y en la
+## cual tiene un peso importante con 721, vale la pena mencionar, que es la de mayor peso en la dimension
+## 1, ahora, es probable que muybueno este cerca de la tercera dimension, sin embargo no es tan
+## grave este acercamiento.
+
+## CONJUNTOS (RENGLONES Y COLUMNAS)
+
+## Despues de hacer el analisis de renglones y de columnas separadamente, observamos que las
+## variables sobresalientes son las que nos estan causando ruido en nuestro analisis y las que estan
+## generando correspondencias, las cuales son, Ciencias de la Computacion y Malo, estas tienen
+## la mejor calidad, un gran peso en la dimension 1, y las coordenadas que los representan nos demuestra
+## la cercania y correspondencia entre estas variables. 
+
+
+plot(ca(prom),main="Asociación gráfica promedio vs. licenciatura")
+legend("topright",c("promedio","licenciatura"),pch=c(17,19),col=c("red","blue"))
+
+## En este grafico observamos la cercania entre Malo y Ciencias de la computacion,
+## lo cual reafirma lo comentado durante todo el analisis, observamos, tambien
+## que Actuaria se encuentra muy cerca de Bueno y matematicos se encuentra justo
+## opuesto de regular y cercano a muy bueno, afirmando lo anterior dicho.
+
+### Otro biplot
+
+win.graph()
+
+plot(ca(prom), mass = TRUE, contrib = "absolute", map = "rowgreen", arrows = c(FALSE, TRUE))
+
+
+## Este biplot tiene una mejor representacion de lo que se ha venido comentado
+## ya que, Ciencias de la COmputacion esta muy cercano a Malo, afirmando lo anterior
+## analizado, Matematicos se encuentran justo en medio de Muy Bueno y Bueno y justamente
+## Opuesto a Regular, esto es, los matematicos tienen un promedio muy bueno o un promedio bueno
+## pero no se andan a "medios chiles", los actuarios se encuentran muy cercanos
+## a Bueno, es decir, los actuarios suelen tener buen promedio y los fisicos se encuentran
+## mas cercanos a lo regular, al igual que Ciencias de la Tierra, ahora, los biologos
+## estan justo en medio, es decir, ellos si son medianones en su promedio, o hay mucha
+## diversificacion entre ellos.
+
+res1<-anacor(prom,ndim=1,scaling=c("Benzecri","Benzecri"))
+res2<-anacor(prom,ndim=2,scaling=c("Benzecri","Benzecri"))
+
+
+
+### Graficas para la evaluacion de las calidades de representacion de los puntos
+
+plot(res1,plot.type="benzplot",main="Distancia Benzecri(2D)")
+
+plot(res2,plot.type="benzplot",main="Distancia Benzecri(2D)")
+
+## Tenemos que nuestras variables tienen una representacion medianamente buena, en 2 dimensiones, esto provoca
+## que realicemos un grafico en Tercera dimension, para checar lo que esta pasando
+
+
+### Gráfica 3D.
+
+win.graph()
+
+plot3d.ca(ca(prom,nd=3))
+
+## Observamos y reafirmamos lo anterior comentado, durante el analisis de salida
+## ya que tenemos que las variables de Actuaria, Ciencias de la Tierra, Matematicas
+## y Muy bueno, se encuentran en la tercera dimension, o que al menos, ahi estan mejor
+## representadas, tambien observamos la buena representacion en una dimension de Malo y
+## Ciencias de la computacion, como se habia verificado en la calidad de representacion
+## en el analisis de salida.
+
+
+
+## Por tanto, despues de realizar este analisis, observamos que existen correspondencias, y son las siguientes:
+## Se observo que Ciencias de la Computacion, tiene una asociacion o correspondencias con un promedio Malo, reafirmandolo
+## en cada paso del analisis, tambien se observo que los Actuarios tienen, o estan asociados a un promedio Bueno, 
+## de igual manera, concluimos que los matematicos tienen una relacion con un promedio Bueno o Muy bueno, pero lo que si tenemos
+## es que estan justo opuestos del promedio Regular, esto puede deberse a que los matematicos encuestados se encontraban en la
+## biblioteca, al igual que los Actuarios, ahora para las demas licenciaturas, Fisicos, Biologos y Ciencias de la tierra, tenemos
+## que se encuentran con un promedio Regular, al menos los fisicos, sin embargo, los Biologos estan como en medio de todos, esto puede
+## deberse a la diversificacion que se tuvo al levantar las encuestas.
+
+

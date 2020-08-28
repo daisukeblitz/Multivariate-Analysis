@@ -1,0 +1,364 @@
+##Ejercicio 6
+# Análisis de correspondencias con la base Árabes.
+# La base Arabes contiene los porcentajes de hogares con diversas instalaciones y equipos en las áreas árabes de Jerusalén Este.
+##Las librerias a usar seran las siguientes:
+library(ca)
+library(ade4)
+library(anacor)
+library(FactoMineR)
+
+ARABES<-read.csv("C:/Users/Punisher/Desktop/punisher/UNAM/Análisis Multivariado/Análisis de Factores y Correspondencias/Arabes.csv",sep=",",header=T)
+attach(ARABES)
+base<-ARABES[c(1:8),c(2:5)]
+
+rownames(base)<-c("toilet","kitchen","bath","electricity","water","radio","tv set","refrigerator")
+
+total.row<-apply(base,1,sum)
+
+total.col<-apply(base,2,sum)
+
+base1<-cbind(base,total.row) 
+base2<-rbind(base1,c(total.col,sum(base)))
+rownames(base2)<-c(rownames(base),"total.col")
+colnames(base2)<-c(colnames(base),"total.row")
+
+base2
+
+base<-as.matrix(base)
+
+table.pro<-prop.table(base)
+
+table.pro1<-prop.table(base,1)
+
+table.pro2<-prop.table(base,2)
+
+   ### Análisis de Perfiles Renglón vía método gráfico ###
+
+win.graph()
+
+Comodidades<-rownames(base)
+matplot(t(table.pro1),type="l",ylab="Proporciones",lty=1:8,col=rainbow(8),xaxt="n")
+axis(1,at=1:length(colnames(base)),labels=colnames(base))
+title("Perfiles renglón: Estúdio Socioeconómico por Región")
+legend("topright",paste(" ",Comodidades),lty=1:8,col=rainbow(8))
+
+##En la gráfica de correspondencia bidimensional referente a los perfiles renglón 
+# podemos notar que los siguientes perfiles muestran características similares:
+# -"electricity" y "water"
+# -"bath" y "refrigerator"
+# Notemos lo siguiente: "kitchen" y "tv set" muestran perfiles similares para todas 
+# las regiones excepto para "JEWISH". De igual forma, "bath" y "radio" describen perfiles
+# parecidos excpeto para "CRISTIAN".
+# Cabe destacar que el perfil de la variable "toilet" es muy similar en todas las regiones,
+# ésto se interpreta como que, independientemente de la región en la que te encuentres
+# el baño es eventualmente usado. Estadísticamente hablando, la variable "toilet" no ayudaría 
+# a caracterizar a las variables de región, ya que la frecuencia del uso de esta variable 
+# es muy similar para todas las regiones.  
+  
+
+##"electricity" y "water"
+
+win.graph()
+perfiles1<-(cbind(table.pro1[4,],table.pro1[5,]))
+colnames(perfiles1)<-c("electricity","water")
+matplot(perfiles1,type="l",ylab="proporciones",lty=1:2,col=rainbow(2),xaxt="n")
+axis(1,at=1:length(colnames(base)),labels=colnames(base))
+title(""electricity" vs "water")
+legend("topright",c("electricity","water"),lty=1:2,col=rainbow(2))
+
+##Los perfiles renglón de "electricity" y "water" son demasiado parecidos.
+
+win.graph()
+perfiles1<-(cbind(table.pro1[4,],table.pro1[5,]))
+colnames(perfiles1)<-c("electricity","water")
+barplot(t(perfiles1), beside = TRUE,col=c("blue","green"),legend=colnames(perfiles1))
+
+##El barplot muestra que la diferencia entre ambos perfiles es casi insignificante para
+# las cuatro regiones.
+
+##De acuerdo a lo observado anteriormente podemos suponer que las variables "electricity"
+# y "water" explican casi lo mismo respecto a las variables de región, es decir, existe una 
+# gran similitud entre los prefiles de "electricity" y los de "water".
+
+##"bath" y "refrigerator"
+
+win.graph()
+perfiles1<-(cbind(table.pro1[3,],table.pro1[8,]))
+colnames(perfiles1)<-c("bath","refrigerator")
+matplot(perfiles1,type="l",ylab="proporciones",lty=1:2,col=rainbow(2),xaxt="n")
+axis(1,at=1:length(colnames(base)),labels=colnames(base))
+legend("topright",c("bath","refrigerator"),lty=1:2,col=rainbow(2))
+
+##Los perfiles de "bath" y de "refrigerator" son similares, sin embargo, no lo son tanto como en 
+# la comparación anterior. De hecho, los perfiles ubicados en CRISTIAN y MOSLEM difieren 
+# bastante.
+
+win.graph()
+perfiles1<-(cbind(table.pro1[3,],table.pro1[8,]))
+colnames(perfiles1)<-c("bath","refrigerator")
+barplot(t(perfiles1), beside = TRUE,col=c("blue","green"),legend=colnames(perfiles1))
+
+##Despues de todo estos perfiles no son tan parecidos..
+
+
+   ### Análisis de Perfiles Columna vía método gráfico ###
+
+win.graph()
+
+Regiones<-colnames(base)
+matplot(table.pro2,type="l",ylab="Proporciones",lty=1:4,col=rainbow(8),xaxt="n")
+axis(1,at=1:length(rownames(base)),labels=rownames(base))
+title("Perfiles columna: Estúdio Socioeconómico por Región")
+legend("topright",paste(" ",Regiones),lty=1:8,col=rainbow(8))
+
+##En la gráfica de correspondencia bidimensional referente a los perfiles columna 
+# podemos notar que los perfiles de región son muy similares en algunas características
+# pero también difieren en otras. Por ejemplo: Todas los perfiles de las regiones 
+# coinciden en las variables "electricity" y "water" como era de esperarse. Sin embargo,
+# los perfiles de CRISTIAN y JEWISH son muy distintos a los de ARMENIAN Y MOSLEM respecto
+# a la variable "radio" aunque ellos sean muy parecidos entre sí.
+# Desde nuestro punto de vista, los perfiles de "CRISTIAN" y "JEWISH" son los más similares, 
+# ya que sólo difieren cuando los perfiles se encuentran con respecto a la variable "toilet".
+
+##"CRISTIAN" y "JEWISH"
+
+win.graph()
+perfiles2<-(cbind(table.pro2[,1],table.pro2[,3]))
+colnames(perfiles2)<-c("CRISTIAN","JEWISH")
+matplot(perfiles2,type="l",ylab="proporciones",lty=1:2,col=rainbow(2),xaxt="n")
+axis(1,at=1:length(rownames(base)),labels=rownames(base))
+legend("topright",c("CRISTIAN","JEWISH"),lty=1:2,col=rainbow(2))
+
+
+win.graph()
+perfiles2<-(cbind(table.pro2[,1],table.pro2[,3]))
+colnames(perfiles2)<-c("CRISTIAN","JEWISH")
+barplot(t(perfiles2), beside = TRUE,col=c("red","green"),legend=colnames(perfiles2))
+
+##Los perfiles de "CRISTIAN" y "JEWISH" no son muy parecidos, sobre todo respecto a las
+# variables "toilet" y "refrigerator", sin embargo, guardan una cercania 
+# razonable.
+
+##########################################################################
+tabla.completa<- function(X) { 
+        result <- chisq.test(X) 
+        print(result)
+        res<-result$residuals 
+        obs <- result$observed 
+        exp <- result$expected
+        res.crudos<-obs-exp
+        chi.table<-((obs-exp)^2)/exp 
+        row.sum <- apply(obs,1,sum) 
+        col.sum <- apply(obs,2,sum) 
+        N <- sum(obs) 
+ 
+        tablacompleta<- cbind(obs,row.sum) 
+        tablacompleta<- rbind(tablacompleta,c(col.sum,N)) 
+        rownames(tablacompleta) <- c(rownames(obs), "Total") 
+        colnames(tablacompleta) <- c(colnames(obs), "Total")
+        I<-length(X[,1])
+        J<-length(X[1,])
+        resnorm<-matrix(0,I,J)
+        
+         for(i in 1:I){
+              for(j in 1:J){
+               resnorm[i,j]<-(obs[i,j]-exp[i,j])/sqrt(exp[i,j]*(1-(row.sum[i]/N))*(1-(col.sum[j]/N)))
+
+}
+rownames(resnorm)<-rownames(obs)
+colnames(resnorm)<-colnames(obs)
+}
+
+return(list(Tabla.completa=tablacompleta,Expected=exp,Chi=chi.table,r.crudos=res.crudos,residuos=res,ajustados=resnorm))
+        } 
+#################################################################################
+tabla.completa(base)
+
+##De acuerdo a la prueba Ji-cuadrada tenemos lo siguiente: 
+# Un estadístico de 1895.64, con 21 grados de libertad y p-value < 2.2e-16
+# Recordemos que para esta prueba tenemos el siguiente contraste:
+#       Ho:Independencia entre renglones y columnas 
+#                             vs
+# Ha:Al menos existe asociación entre algún renglón y alguna columna.
+#
+# Ho también se puede interpretar como la inexistencia de asociación entre renglones 
+# y columnas. Como nuestro p-value es muy cercano a cero, entonces nos encontramos en
+# área de rechazo, es decir, rechazamos la hipótesis de no asociación, entonces 
+# existe asociación entre al menos un renglón y una columna. 
+# Notemos lo siguiente:
+# Al comparar los valores de la tabla con los valores esperados, podemos observar 
+# que difieren en gran medida los siguientes variables:
+# -Los valores de "radio" 
+# -Los valores de "kitchen" 
+# Esta diferencia evidencía el grado de no independencia entre las variables.
+
+# En la matriz de distancias Ji-Cuadrada, encontramos valores muy altos para la variable "radio"
+# con respecto a las distintas variables de región, también las variables "kitchen" y "refrigerator"
+# muestran valores elevados con respecto a las variables de región. Recordemos que la 
+# distancia Ji-cuadrada representa la "lejania" entre los perfiles renglón o columna de su perfil medio,
+# Por otro lado, la Ji-cuadrada es una medida del nivel de asociación global de las variables en estudio.
+# Analicemos los residuos crudos:
+# La variable "kitchen" cuenta con residuos crudos muy elevados con respecto a las diferentes regiones,
+# cabe destacar que "kitchen" y "ARMENIAN" cuentan con el residuo crudo mas grande pero negativo, esto 
+# significa que que hay una fuerte asociación negativa con esta variable. Por otro lado la variable "radio"
+# también cuenta con residuos crudos elevados, negativos con CRISTIAN y JEWISH y positivos con las otras 
+# regiones.
+# En cuanto a los residuos y los residuos ajustados tenemos que las variables "radio" y "kitchen" siguen 
+# aportando valores altos.
+# Recordemos que entre mas grande sea el residuo mas fuerte es la asociación entre las variables, 
+# ésto lo podemos interpretar como que tanto la variable "radio", como la variable "kitchen" conservan una
+# importante asociación con las distintas regiones, la mas fuerte parece ser entre "kitchen" y ARMENIAN.
+
+##Resultados de la función ca()
+
+ca(base)
+
+##Con la función ca() obtenemos la masa, la distancia Ji-cuadrada, la inercia y las coordenadas 
+# de los puntos que representan a las varaibles en dos dimensiones.
+# De las variables de nivel socioeconómico, podemos notar que la mayor cantidad de masa la obtuvo 
+# la variable "electricity". Las distancias Ji-cuadrada mas elevadas las proporcionan las variables "radio", "kitchen",
+# "bath", "tv set" y "refrigerator". Esta distancia representa la "lejania" entre los perfiles renglón o columna de su perfil medio,
+# mas aún, si los perfiles difieren poco de sus perfiles medios, entonces el valor de su inercia sería
+# bajo y eso implicaría una pobre asociación entre las variables. 
+
+#Con respecto a las variables de región; CRISTIAN, ARMENIAN y MOSLEM aportan casí el mismo nivel de masa, JEWISH aporta un
+# poco menos. En caunto a la distancia Ji-cuadrada, las variables ARMENIAN y JEWISH muestran los valores mas 
+# altos, sin embargo, éstos no difieren mucho de los valores generados por las otras variables de región.
+# La inercia mas alta la proporciona ARMENIAN.
+
+summary(ca(base))
+
+##Con el summary de ésta función podemos ver que tan bien representadas estan las variables en las distintas dimensiones:
+# De acuerdo a lo anterior la representación en dos dimensiones es bastante buena, ya que en la primera dimensión
+# se acumula el 74.7% de la inercia (que es como la varianza explicada) y con la segunda dimensión se explica 
+# el 93.5% de la inercia.
+# Renglones.
+# Para las variables "kitchen", "bath", "electricity", "water", "radio" y "refrigerator" la calidad de representación
+# es muy buena, para las otras variables (toilet y tv set) la calidad de representación es bastante mala.
+# Ahora bien, en la primera dimensión, las variables con mejor calidad y mayor contribución (en ésta dimensión) son 
+# "kitchen" y "radio". Por otro lado, en la segunda dimensión, las variables con mejor calidad son "electricity", 
+# "water" y "refrigerator", y las variables con mayor contribución son "refrigerator" y "radio". La variable "bath" cuenta
+# con alta calidad en la dimensión 1, sin embargo no contribuye mucho en ésta dimensión.
+#Columnas.
+# Las calidades de representación de todas las variables de región son muy altas. La variable CRISTIAN tiene una similar 
+# calidad en la dimensión 1 que en la dimensión 2, pero contibuye mas a la dimensión 2.
+# Las variables ARMENIAN y JEWISH tienen una alta calidad y contribución en la dimensión 1, 
+# mientras que MOSLEM tiene una alta caidad y contribución en la dimensión 2.
+
+##Comparación de gráficas biplot en 2D y 3D
+win.graph()
+
+##Gráfica perfiles renglón y perfiles columna juntos.
+acs1<-CA(base)
+
+par(mfrow=c(1,2))
+##Gráfica perfiles renglón.
+lab<-rownames(base)
+plot(acs1$row$coord[,1:2],pch=17,col="red",cex=2)
+text(acs1$row$coord[,1:2],labels=lab,cex=0.8)
+abline(h=0,lty=3)
+abline(v=0,lty=3)
+
+##Gráfica perfiles columna.
+lab1<-colnames(base)
+plot(acs1$col$coord[,1:2],pch=18,col="blue",cex=2)
+text(acs1$col$coord[,1:2],labels=lab1,cex=0.8)
+abline(h=0,lty=3)
+abline(v=0,lty=3)
+
+##En éstas gráficas podemos observar las asociaciones perfiles columna y perfiles renglón en dos 
+# dimensiones, por ejemplo "electricity" y "water" se encuentran muy cercanos, ésto ya lo habíamos notado
+# con las gráficas iniciales.
+# Con esta gráfica podemos visualizar lo que deciamos anteriormente sobre la contribución de las variables
+# a cada dimensión. 
+# Un dato que es importante denotar es que, variables como "toilet" que no se encontraban bien representadas en dos 
+# dimensiones, es posible que al momento de ver el biplot en 2D el punto que represente a ésta variable
+# se encuentre a poca distancia de otro, pero ésto no significa que sean similares, ya que por su baja
+# calidad de representación puede pasar que en 3 dimensiones ese punto se proyecte a un sitio completamente lejano
+# de la masa de puntos. 
+
+### Gráfica 3D.
+
+win.graph()
+
+plot3d.ca(ca(base,nd=3))
+  
+acs1$eig[,1]
+barplot(acs1$eig[,1],col=rainbow(6))
+
+##La gráfica anterior muestra la inercia explicada.
+
+acs1$eig[,2:3]
+
+##Para la tercera dimensión, ya se explica el 100% de la varianza como ya habíamos visto anteriormente.
+
+acs1$row$contrib[,1:2]
+
+##La tabla enterior muestra la contribución de cada variabe de renglónen cada dimensión. 
+
+acs1$col$contrib[,1:2]
+
+##La tabla enterior muestra la contribución de cada variabe de columna cada dimensión. 
+
+acs1$row$cos2[,1:2]
+acs1$col$cos2[,1:2]
+
+
+## Función anacor()
+
+acs2<-anacor(base,scaling=c("standard","centroid"))
+summary(acs2)
+
+### Gráfica de correspondencias por renglones
+
+plot(acs2,plot.type="rowplot",col="blue")
+
+plot(acs2,plot.type="colplot",col="red")
+
+### Grafica conjunta renglones y columnas
+
+plot(acs2,plot.type="jointplot",xlim = c(-2,1.5), ylim = c(-2, 1.5), asp = 1)
+
+plot(acs2,plot.type="graphplot",xlim = c(-3.1,1.5), ylim = c(-3.1, 1.5), wlines = 5, asp=1) 
+
+### Graficas Biplot
+
+plot(ca(base),main="Asociación gráfica regiones vs. Nivel Socioeconómico")
+legend("topright",c("Regiones","Nivel Socioeconómico"),pch=c(17,19),col=c("red","blue"))
+
+plot(ca(base), mass = TRUE,arrows = c(FALSE, TRUE), main="Asociación gráfica regiones vs. Nivel Socioeconómico")
+legend("topright",c("Regiones","Nivel Socioeconómico"),pch=c(17,19),col=c("red","blue"))
+
+
+plot(ca(base), mass = TRUE,arrows = c(TRUE, FALSE), main="Asociación gráfica regiones vs. Nivel Socioeconómico")
+legend("topright",c("Regiones","Nivel Socioeconómico"),pch=c(17,19),col=c("red","blue"))
+
+
+
+plot(ca(base), mass = TRUE,arrows = c(TRUE, TRUE), main="Asociación gráfica regiones vs. Nivel Socioeconómico")
+legend("topright",c("Regiones","Nivel Socioeconómico"),pch=c(17,19),col=c("red","blue"))
+
+
+res1<-anacor(base,ndim=2,scaling=c("Benzecri","Benzecri"))
+res2<-anacor(base,ndim=3,scaling=c("Benzecri", "Benzecri"))
+
+### Graficas para la evaluacion de las calidades de representacion de los puntos
+
+plot(res1,plot.type="benzplot",main="Distancia Benzecri(2D)")
+plot(res2,plot.type="benzplot",main="Distancia Benzecri(3D)")
+
+##Al analizar la gráfica de Benzecri nos dimos cuenta de que hay similitudes entre perfiles renglón que no estan bien representadas
+# en dos dimensiones, como: tv set y radio, refrigerator y tv set, tv set y toilet, tv set y water. 
+# Como se puede apreciar, las relaciones entre perfiles que involucran a la variable tv set no se encuentran bien representadas en
+# la segunda dimensión. Lo anteriror era un hecho, pues ya habíamos comentado anteriormente que ésta variable no contaba con buena
+# calidad de representación en la segunda dimensión.
+# En cuanto a las similitudes entre los perfiles columna, estos se encuentran, en general, bien representados.
+# Para tres dimensiones, tanto los perfiles renglón como los columna ya se encuentran perfectamente representados.
+
+### Otro biplot
+
+win.graph()
+
+plot(ca(base), mass = TRUE, contrib = "absolute", map = "rowgreen", arrows = c(FALSE, TRUE))
+
+
